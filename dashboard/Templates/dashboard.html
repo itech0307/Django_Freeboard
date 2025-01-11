@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Freeboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <h1>Temperature and Humidity Freeboard</h1>
+    <canvas id="tempChart" width="400" height="200"></canvas>
+    <canvas id="humidityChart" width="400" height="200"></canvas>
+
+    <script>
+
+      // Create 2 charts
+      const tempCtx = document.getElementById("tempChart").getContext("2d");
+      const humidityCtx = document
+        .getElementById("humidityChart")
+        .getContext("2d");
+
+      const tempChart = new Chart(tempCtx, {
+        type: "line",
+        data: {
+          labels: [], // Các thời điểm
+          datasets: [
+            {
+              label: "Temperature (°C)",
+              data: [],
+              borderColor: "red",
+              borderWidth: 1,
+              fill: false,
+            },
+          ],
+        },
+      });
+
+      const humidityChart = new Chart(humidityCtx, {
+        type: "line",
+        data: {
+          labels: [], // Các thời điểm
+          datasets: [
+            {
+              label: "Humidity (%)",
+              data: [],
+              borderColor: "blue",
+              borderWidth: 1,
+              fill: false,
+            },
+          ],
+        },
+      });
+
+      //UPDATE function
+      async function fetchData() {
+        const response = await fetch("/dashboard/data/");
+        const data = await response.json();
+
+        const currentTime = new Date().toLocaleTimeString();
+
+        tempChart.data.labels.push(currentTime);
+        tempChart.data.datasets[0].data.push(data.temperature);
+        if (tempChart.data.labels.length > 10) tempChart.data.labels.shift();
+        if (tempChart.data.datasets[0].data.length > 10)
+          tempChart.data.datasets[0].data.shift();
+        tempChart.update();
+
+        //UPDATE HUMIDITY CHART
+        humidityChart.data.labels.push(currentTime);
+        humidityChart.data.datasets[0].data.push(data.humidity);
+        if (humidityChart.data.labels.length > 10)
+          humidityChart.data.labels.shift();
+        if (humidityChart.data.datasets[0].data.length > 10)
+          humidityChart.data.datasets[0].data.shift();
+        humidityChart.update();
+      }
+
+      // Cập nhật mỗi 2 giây
+      setInterval(fetchData, 2000);
+    </script>
+  </body>
+</html>
